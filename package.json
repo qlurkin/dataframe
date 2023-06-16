@@ -1,0 +1,16 @@
+{
+  "name": "dataframe",
+  "type": "module",
+  "main": "dataframe.mjs",
+  "types": "index.d.ts",
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "version": "1.0.0",
+  "description": "small dataframe library for handeling students grades",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Quentin Lurkin",
+  "license": "MIT"
+}
