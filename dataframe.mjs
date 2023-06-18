@@ -1,9 +1,11 @@
 import { append, rename_column, find, write_ecam_csv, serve, fill_null, round_to_half, round_to_tenth } from './data.mjs'
 import fs from 'fs/promises'
+import { basename } from 'path'
 
 function copy(students) {
     return students.map(s => ({...s}))
 }
+
 
 function dynamic_typing(value) {
     if(value === 'true') return true
@@ -11,8 +13,8 @@ function dynamic_typing(value) {
     if(value === 'null') return null
     const number = parseFloat(value)
     if(isNaN(number)) return value
-    if(number > 9007199254740992) return value
-    if(number < -9007199254740992) return value
+    if(number > 9007199254740991) return value
+    if(number < -9007199254740991) return value
     return number
 }
 
@@ -35,24 +37,26 @@ export async function load_csv(filename) {
         }
         return res
     })
-    return Dataframe(objects)
+    return Dataframe(objects, basename(filename))
 }
 
 export async function load_check_exo_report(filename) {
-    const content = JSON.parse(await fs.readFile(filename, {encoding: 'utf8'})).students
-    const students = content.map(student => ({
+    const content = JSON.parse(await fs.readFile(filename, {encoding: 'utf8'}))
+    const title = content.title
+    const students = content.students.map(student => ({
         matricule: student.student.matricule,
         name: student.student.name,
         grade: student.grade,
     }))
-    return Dataframe(students)
+    return Dataframe(students, title)
 }
 
-export function Dataframe(array_of_objects) {
+export function Dataframe(array_of_objects, name) {
     const columns = Object.keys(array_of_objects[0])
     const data = copy(array_of_objects)
 
     const that = {
+        name,
         data,
         columns,
         left_join: source => {
@@ -61,7 +65,7 @@ export function Dataframe(array_of_objects) {
             var index = cols.indexOf('matricule')
             cols.splice(index, 1)
             append(res, source.data, cols)
-            return Dataframe(res)
+            return Dataframe(res, name)
         },
         select: cols => {
             if(!cols.includes('matricule')) cols = ['matricule', ...cols]
@@ -71,19 +75,19 @@ export function Dataframe(array_of_objects) {
                     res[col] = row[col]
                 }
                 return res
-            }))
+            }), name)
         },
-        rename: (column, new_name) => {
+        rename_column: (column, new_name) => {
             const new_data = copy(data)
             rename_column(new_data, column, new_name)
-            return Dataframe(new_data)
+            return Dataframe(new_data, name)
         },
         students: matricules => {
             const res = []
             for(const matricule of matricules) {
                 res.push(that.student(matricule))
             }
-            return Dataframe(res)
+            return Dataframe(res, name)
         },
         student: matricule => {
             return {...find(data, matricule)}
@@ -93,30 +97,33 @@ export function Dataframe(array_of_objects) {
             return that
         },
         serve: () => {
-            serve(data)
+            serve(data, name)
             return that
         },
         fill_null: (columns, value) => {
             const new_data = copy(data)
             fill_null(new_data, columns, value)
-            return Dataframe(new_data)
+            return Dataframe(new_data, name)
         },
         round_to_half: column => {
             const new_data = copy(data)
             round_to_half(new_data, column)
-            return Dataframe(new_data)
+            return Dataframe(new_data, name)
         },
         round_to_tenth: column => {
             const new_data = copy(data)
             round_to_tenth(new_data, column)
-            return Dataframe(new_data)
+            return Dataframe(new_data, name)
         },
         map: fun => {
-            return Dataframe(data.map(student => fun({...student})))
+            return Dataframe(data.map(student => fun({...student})), name)
         },
         log: () => {
             console.log(data)
             return that
+        },
+        rename: name => {
+          return Dataframe(data, name)
         }
     }
 

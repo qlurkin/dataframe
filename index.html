@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      body {
+        font-family: sans-serif;
+      }
+      
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      td {
+        border-bottom: 1px solid black;
+      }
+
+      th {
+        border-bottom: 2px solid black;
+        text-align: left;
+      }
+
+      td, th {
+        padding: 0.5rem;
+      }
+
+      .failed > td {
+        background-color: rgba(255, 0, 0, 0.2);
+      }
+
+      tr:hover {
+        background-color: rgba(128, 128, 128, 0.3);
+      }
+    </style>
+    <script type="module" defer>
+      function fuzzySearch(items, query) {
+        const search = query.split(' ')
+        const ret = items.reduce((found, i) => {
+          let matches = 0
+          search.forEach(s => {
+            let hit = 0
+            for(const prop in i) {
+              if (typeof i[prop] === 'string' || i[prop] instanceof String) {
+                if(i[prop].indexOf(s) > -1) {
+                  hit++
+                }
+              }
+            }
+            if (hit >= 1) {
+              matches++
+            }
+          })
+          if (matches == search.length) {
+            found.push(i)
+          }
+          return found
+        }, [])
+        return ret
+      }
+
+      function showData(data) {
+        const columns = Object.keys(data[0])
+        let res = columns.map(column => `<th>${column}</th>`).join('')
+        res = `<tr>${res}</tr>`
+        res += data.map(student => {
+          let className = ''
+          if(student.grade !== undefined) {
+            if(student.grade < 10) {
+              className = ' class="failed"'
+            }
+          }
+          return `<tr${className}>${columns.map(column => `<td>${student[column]}</td>`).join('')}</tr>`
+        }).join('')
+        res = `<table>${res}</table>`
+        document.querySelector('#data').innerHTML = res
+      }
+
+      async function close_app() {
+        const response = await fetch('/close')
+        const content = await response.json()
+        if(content.ok) {
+          window.close()
+        }
+      }
+
+      const response = await fetch('/data')
+      const content = await response.json()
+      console.log(content)
+      const data = content.students
+      const title = content.title
+      document.title = title
+      document.querySelector('h1').innerHTML = title
+
+      showData(data)
+
+      document.querySelector('#filter').addEventListener('input', event => {
+        const query = event.target.value
+        showData(fuzzySearch(data, query))
+      })
+
+      document.querySelector('#close').addEventListener('click', async () => {
+        close_app()
+      })
+    </script>
+  </head>
+  <body>
+    <h1></h1>
+    <p>Filter: <input type="test" name="filter" id="filter" value=""></p>
+    <button id='close'>Close</button>
+    <div id="data">
+      
+    </div>
+  
+  </body>
+</html>
