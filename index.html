@@ -94,10 +94,51 @@
         return ret
       }
 
+      function sum(arr) {
+        return arr.reduce((acc, elem) => acc + elem, 0)
+      }
+
+      function mean(arr) {
+        if(arr.length === 0) return undefined
+        return sum(arr)/arr.length
+      }
+
+      function sigma(arr) {
+        return Math.sqrt(mean(arr.map(val => Math.pow(val-mean(arr), 2))))
+      }
+
+      function hist(arr) {
+        const res = []
+        for(let i=0; i<20; i++) {
+          res.push(0)
+        }
+        for(const val of arr) {
+          res[Math.floor(val)-1] += 1
+        }
+        return res
+      }
+
+      function stat(data) {
+        const grades = []
+        data.map(student => {
+          if(student.grade !== undefined) {
+            if(student.grade > 1)
+              grades.push(student.grade)
+          }
+        })
+        const display = document.querySelector('#display')
+        display.innerHTML = `<p>Count: <strong>${data.length}</strong></p>`
+        display.innerHTML += `<p>Count(>1): <strong>${grades.length}</strong></p>`
+        display.innerHTML += `<p>Mean: <strong>${mean(grades)}</strong></p>`
+        display.innerHTML += `<p>Standard Deviation: <strong>${sigma(grades)}</strong></p>`
+        display.innerHTML += `<p>Histogram: <strong>${hist(grades)}</strong></p>`
+      }
+
       function showData(data) {
         const columns = Object.keys(data[0])
         let res = columns.map(column => `<th>${column}</th>`).join('')
         res = `<thead><tr>${res}</tr><tr><th class="hr" colspan="${columns.length}"></th></tr></thead>`
+        
         res += `<tbody>${data.map(student => {
           let className = ''
           if(student.grade !== undefined) {
@@ -121,12 +162,12 @@
 
       const response = await fetch('/data')
       const content = await response.json()
-      console.log(content)
       const data = content.students
       const title = content.title
       document.title = title
       document.querySelector('h1').innerHTML = title
 
+      stat(data)
       showData(data)
 
       document.querySelector('#filter').addEventListener('input', event => {
@@ -137,14 +178,31 @@
       document.querySelector('#close').addEventListener('click', async () => {
         close_app()
       })
+
+      const dialog = document.querySelector('dialog')
+
+      document.querySelector('#stat').addEventListener('click', () => {
+        dialog.showModal()
+      })
+
+      dialog.querySelector('button').addEventListener('click', () => {
+        dialog.close()
+      })
     </script>
   </head>
   <body>
     <header>
       <h1></h1>
       <p>Filter: <input type="test" name="filter" id="filter" value=""></p>
-      <button id='close'>Close</button>
+      <div>
+        <button id='stat'>Stat</button>
+        <button id='close'>Close</button>
+      </div>
     </header>
     <div id="data"></div>
+    <dialog>
+      <div id="display"></div>
+      <button>Ok</button>
+    </dialog>
   </body>
 </html>
