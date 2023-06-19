@@ -1,6 +1,7 @@
 import { append, rename_column, find, write_ecam_csv, serve, fill_null, round_to_half, round_to_tenth } from './data.mjs'
 import fs from 'fs/promises'
-import { basename } from 'path'
+import { basename, extname, join } from 'path'
+import toml from 'toml'
 
 function copy(students) {
     return students.map(s => ({...s}))
@@ -49,6 +50,41 @@ export async function load_check_exo_report(filename) {
         grade: student.grade,
     }))
     return Dataframe(students, title)
+}
+
+export async function load_toml_folder(filename) {
+    let files = await fs.readdir(filename)
+    files = files.map(file => join(filename, file))
+    files = files.filter(async file => (await fs.stat(file)).isDirectory())
+    files = files.filter(file => extname(file) === '.toml')
+    const data = []
+    let title = basename(filename)
+    await Promise.all(files.map(async file => {
+        const content = toml.parse(await fs.readFile(file))
+        if(content.title !== undefined) {
+            title = content.title
+        }
+        content.students.forEach(student => {
+            const student_data = {
+                matricule: student.matricule,
+                name: student.name
+            }
+            const columns = Object.keys(content.features)
+            columns.forEach(column => {
+                const value = content.features[column]
+                if(Array.isArray(value)) {
+                    student_data[column] = value[0]
+                    
+                }
+                else {
+                    student_data[column] = value
+                }
+            })
+            data.push(student_data)
+        })
+    }))
+    data.sort((a, b) => a.name < b.name ? -1 : 1)
+    return Dataframe(data, title)
 }
 
 export function Dataframe(array_of_objects, name) {
