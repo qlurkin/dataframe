@@ -7,6 +7,28 @@
     <style>
       body {
         font-family: sans-serif;
+        padding-top: 3rem;
+        margin: 1rem;
+      }
+
+      header {
+        display: flex;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background-color: white;
+        height: 4rem;
+        z-index: 1000;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 1rem;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+        margin: 0;
+        vertical-align: middle;
       }
       
       table {
@@ -14,13 +36,24 @@
         border-collapse: collapse;
       }
 
+      thead {
+        position: sticky;
+        top: 4em;
+      }
+
+      .hr {
+        background-color: black;
+        height: 2px;
+        padding: 0;
+      }
+
       td {
         border-bottom: 1px solid black;
       }
 
       th {
-        border-bottom: 2px solid black;
         text-align: left;
+        background-color: white;
       }
 
       td, th {
@@ -64,8 +97,8 @@
       function showData(data) {
         const columns = Object.keys(data[0])
         let res = columns.map(column => `<th>${column}</th>`).join('')
-        res = `<tr>${res}</tr>`
-        res += data.map(student => {
+        res = `<thead><tr>${res}</tr><tr><th class="hr" colspan="${columns.length}"></th></tr></thead>`
+        res += `<tbody>${data.map(student => {
           let className = ''
           if(student.grade !== undefined) {
             if(student.grade < 10) {
@@ -73,7 +106,7 @@
             }
           }
           return `<tr${className}>${columns.map(column => `<td>${student[column]}</td>`).join('')}</tr>`
-        }).join('')
+        }).join('')}</tbody>`
         res = `<table>${res}</table>`
         document.querySelector('#data').innerHTML = res
       }
@@ -107,12 +140,11 @@
     </script>
   </head>
   <body>
-    <h1></h1>
-    <p>Filter: <input type="test" name="filter" id="filter" value=""></p>
-    <button id='close'>Close</button>
-    <div id="data">
-      
-    </div>
-  
+    <header>
+      <h1></h1>
+      <p>Filter: <input type="test" name="filter" id="filter" value=""></p>
+      <button id='close'>Close</button>
+    </header>
+    <div id="data"></div>
   </body>
 </html>
