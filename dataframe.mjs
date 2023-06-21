@@ -137,8 +137,12 @@ export function Dataframe(array_of_objects, name) {
             return that
         },
         fill_null: (columns, value) => {
-            const new_data = copy(data)
-            fill_null(new_data, columns, value)
+            const new_data = []
+            console.log(data)
+            for(const student of data) {
+                console.log(student)
+                new_data.push(fill_null(student, columns, value))
+            }
             return Dataframe(new_data, name)
         },
         round_to_half: column => {
@@ -165,3 +169,5 @@ export function Dataframe(array_of_objects, name) {
 
     return that
 }
+
+export { fill_null }

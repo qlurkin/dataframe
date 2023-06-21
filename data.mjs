@@ -101,13 +101,13 @@ export function serve(students, title) {
   })
 }
 
-export function fill_null(students, columns, value) {
-  for(const student of students) {
-    for(const column of columns) {
-      if(student[column] === null)
-      student[column] = value
-    }
+export function fill_null(student, columns, value) {
+  const new_student = {...student}
+  for(const column of columns) {
+    if(new_student[column] === null)
+    new_student[column] = value
   }
+  return new_student
 }
 
 export function round_to_half(students, column) {
